@@ -18,20 +18,26 @@ module Gym
           path = File.join(Helper.gem_path("gym"), "lib/assets/package_application_patches/PackageApplication_MD5")
           expected_md5 = File.read(path)
 
-          raise "Found an invalid `PackageApplication` script. This is not supported." unless expected_md5 == Digest::MD5.file("#{developer_dir}/Platforms/iPhoneOS.platform/Developer/usr/bin/PackageApplication").hexdigest
+          # If that location changes, search it using xcrun --sdk iphoneos -f PackageApplication
+          package_application_path = "#{developer_dir}/Platforms/iPhoneOS.platform/Developer/usr/bin/PackageApplication"
+
+          raise "Unable to patch the `PackageApplication` script bundled in XCode. This is not supported." unless expected_md5 == Digest::MD5.file(package_application_path).hexdigest
 
           # Duplicate PackageApplication script to PackageApplication4Gym
-          FileUtils.copy_file("#{developer_dir}/Platforms/iPhoneOS.platform/Developer/usr/bin/PackageApplication", patched_package_application_path)
+          FileUtils.copy_file(package_application_path, patched_package_application_path)
 
           # Apply patches to PackageApplication4Gym from patches folder
           Dir[File.join(Helper.gem_path("gym"), "lib/assets/package_application_patches/*.diff")].each do |patch|
             Helper.log.info "Applying Package Application patch: #{File.basename(patch)}" unless Gym.config[:silent]
             command = ["patch #{patched_package_application_path} < #{patch}"]
-            print_command(command, "Applying Package Application patch: #{File.basename(patch)}") if $verbose
+            Runner.new.print_command(command, "Applying Package Application patch: #{File.basename(patch)}") if $verbose
 
-            Gym::CommandsExecutor.execute(command: command, print_all: false, error: proc do |output|
-              ErrorHandler.handle_build_error(output)
-            end)
+            FastlaneCore::CommandExecutor.execute(command: command,
+                                                print_all: false,
+                                            print_command: !Gym.config[:silent],
+                                                    error: proc do |output|
+                                                      ErrorHandler.handle_package_error(output)
+                                                    end)
           end
         end
 

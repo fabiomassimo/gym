@@ -13,8 +13,6 @@ module Gym
       move_results
     end
 
-    private
-
     #####################################################
     # @!group Printing out things
     #####################################################
@@ -42,6 +40,8 @@ module Gym
       )
     end
 
+    private
+
     #####################################################
     # @!group The individual steps
     #####################################################
@@ -56,9 +56,12 @@ module Gym
     def build_app
       command = BuildCommandGenerator.generate
       print_command(command, "Generated Build Command") if $verbose
-      Gym::CommandsExecutor.execute(command: command, print_all: true, error: proc do |output|
-        ErrorHandler.handle_build_error(output)
-      end)
+      FastlaneCore::CommandExecutor.execute(command: command,
+                                          print_all: true,
+                                      print_command: !Gym.config[:silent],
+                                              error: proc do |output|
+                                                ErrorHandler.handle_build_error(output)
+                                              end)
 
       Helper.log.info("Successfully stored the archive. You can find it in the Xcode Organizer.".green)
       Helper.log.info("Stored the archive in: ".green + BuildCommandGenerator.archive_path) if $verbose
@@ -75,9 +78,12 @@ module Gym
       command = PackageCommandGenerator.generate
       print_command(command, "Generated Package Command") if $verbose
 
-      Gym::CommandsExecutor.execute(command: command, print_all: false, error: proc do |output|
-        ErrorHandler.handle_package_error(output)
-      end)
+      FastlaneCore::CommandExecutor.execute(command: command,
+                                          print_all: false,
+                                      print_command: !Gym.config[:silent],
+                                              error: proc do |output|
+                                                ErrorHandler.handle_package_error(output)
+                                              end)
     end
 
     # Determine whether it is a Swift project and, eventually, include all required libraries to copy from Xcode's toolchain directory.
@@ -108,9 +114,12 @@ module Gym
             command_parts << "> /dev/null" unless $verbose
             print_command(command_parts, "Fix Swift embedded code if needed") if $verbose
 
-            Gym::CommandsExecutor.execute(command: command_parts, print_all: false, error: proc do |output|
-              ErrorHandler.handle_package_error(output)
-            end)
+            FastlaneCore::CommandExecutor.execute(command: command_parts,
+                                                print_all: false,
+                                            print_command: !Gym.config[:silent],
+                                                    error: proc do |output|
+                                                      ErrorHandler.handle_package_error(output)
+                                                    end)
           end
         end
       end
@@ -136,8 +145,7 @@ module Gym
 
         puts "" # new line
 
-        Helper.log.info "Successfully exported and compressed dSYM file: ".green
-        Helper.log.info File.join(Gym.config[:output_directory], File.basename(PackageCommandGenerator.dsym_path))
+        Helper.log.info "Successfully exported and compressed dSYM file.".green
       end
 
       ipa_path = File.join(Gym.config[:output_directory], File.basename(PackageCommandGenerator.ipa_path))
