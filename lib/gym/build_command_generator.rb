@@ -36,9 +36,10 @@ module Gym
 
         options = []
         options += project_path_array
-        options << "-configuration '#{config[:configuration]}'" # We need `Release` to export the DSYM file as well
+        options << "-configuration '#{config[:configuration]}'" if config[:configuration]
         options << "-sdk '#{config[:sdk]}'" if config[:sdk]
         options << "-destination '#{config[:destination]}'" if config[:destination]
+        options << "-xcconfig '#{config[:xcconfig]}'" if config[:xcconfig]
         options << "-archivePath '#{archive_path}'"
         options << config[:xcargs] if config[:xcargs]
 
