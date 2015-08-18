@@ -6,12 +6,9 @@ module Gym
   class PackageCommandGenerator
     class << self
       def generate
-        @patched_package_application = XcodeFix.patch_package_application
-
-        parts = ["/usr/bin/xcrun #{@patched_package_application} -v"]
+        parts = ["/usr/bin/xcrun #{XcodebuildFixes.patch_package_application} -v"]
         parts += options
         parts += pipe
-        parts += postfix
 
         parts
       end
@@ -38,13 +35,8 @@ module Gym
         [""]
       end
 
-      def postfix
-        # Remove the patched PackageApplication file after the export is finished
-        ["&& rm '#{@patched_package_application}'"]
-      end
-
       def appfile_path
-        Dir.glob("#{BuildCommandGenerator.archive_path}/Products/Applications/*.app").first
+        Dir[BuildCommandGenerator.archive_path + "/**/*.app"].last
       end
 
       # We export it to the temporary folder and move it over to the actual output once it's finished and valid
@@ -54,7 +46,7 @@ module Gym
 
       # The path the the dsym file for this app. Might be nil
       def dsym_path
-        Dir[BuildCommandGenerator.archive_path + "/**/*.dSYM"].last
+        Dir[BuildCommandGenerator.archive_path + "/**/*.app.dSYM"].last
       end
     end
   end
