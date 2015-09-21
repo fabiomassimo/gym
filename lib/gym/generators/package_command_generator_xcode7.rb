@@ -7,7 +7,7 @@ module Gym
 
         if rvm_installation_detected?
           parts = ["rvm system"] # Swtich to system's ruby version
-          parts += " | /usr/bin/xcrun xcodebuild -exportArchive" # pipe to xcodebuild
+          parts += [" | /usr/bin/xcrun xcodebuild -exportArchive"] # pipe to xcodebuild
         else
           parts = ["/usr/bin/xcrun xcodebuild -exportArchive"]
         end
