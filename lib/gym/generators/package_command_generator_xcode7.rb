@@ -64,6 +64,8 @@ module Gym
         if Gym.config[:export_method] == 'app-store'
           hash[:uploadSymbols] = (Gym.config[:include_symbols] ? true : false)
           hash[:uploadBitcode] = (Gym.config[:include_bitcode] ? true : false)
+        else
+            hash[:compileBitcode] = false
         end
 
         hash.to_plist
