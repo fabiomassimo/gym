@@ -90,7 +90,7 @@ module Gym
       def rvm_installation_detected?
         @rvm_installation ||= system("env | egrep -v '^PATH' | egrep -q '^rvm_path'")
         if @rvm_installation
-          @rvm_version ||=  `which ruby`.slice(0..(test.index('/bin'))).split("/").last
+          @rvm_version ||=  `which ruby`.split('/bin').first.split("/").last
         end
       end
     end
