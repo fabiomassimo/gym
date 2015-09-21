@@ -89,7 +89,8 @@ gym
 :bullettrain_side: | Don't remember any complicated build commands, just `gym`
 :wrench:  | Easy and dynamic configuration using parameters and environment variables
 :floppy_disk:   | Store common build settings in a `Gymfile` 
-:computer: | All archives are stored and accessible in the Xcode Organizer
+:outbox_tray: | All archives are stored and accessible in the Xcode Organizer
+:computer: | Supports both iOS and Mac applications
 
 ![/assets/gymScreenshot.png](/assets/gymScreenshot.png)
 
@@ -115,6 +116,10 @@ That's all you need to build your application. If you want more control, here ar
 
     gym --workspace "Example.xcworkspace" --scheme "AppName" --clean
 
+If you need to use a different xcode install, use xcode-select or define DEVELOPER_DIR:
+
+    DEVELOPER_DIR="/Applications/Xcode6.2.app" gym
+
 For a list of all available parameters use
 
     gym --help
@@ -123,6 +128,11 @@ If you run into any issues, use the `verbose` mode to get more information
 
 
     gym --verbose
+
+To pass boolean parameters make sure to use `gym` like this:
+
+    gym --include_bitcode true --include_symbols true
+
 
 # Gymfile
 
@@ -140,6 +150,24 @@ clean true
 output_directory "./build"    # store the ipa in this folder
 output_name "MyApp"           # the name of the ipa file
 ```
+
+# Automating the whole process
+
+`gym` works great together with [fastlane](https://fastlane.tools), which connects all deployment tools into one streamlined workflow. 
+
+Using `fastlane` you can define a configuration like
+
+```ruby
+lane :beta do
+  xctool
+  gym(scheme: "MyApp")
+  crashlytics
+end
+```
+
+You can then easily switch between the beta provider (e.g. `testflight`, `hockey`, `s3` and more).
+
+For more information visit the [fastlane GitHub page](https://github.com/KrauseFx/fastlane).
 
 # How does it work?
 

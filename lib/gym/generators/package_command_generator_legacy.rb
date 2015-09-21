@@ -1,9 +1,9 @@
 module Gym
-  # Responsible for building the fully working xcodebuild command
+  # Responsible for building the fully working xcodebuild command on Xcode < 7
   #
   # Because of a known bug in PackageApplication Perl script used by Xcode the packaging process is performed with
   # a patched version of the script.
-  class PackageCommandGenerator
+  class PackageCommandGeneratorLegacy
     class << self
       def generate
         parts = ["/usr/bin/xcrun #{XcodebuildFixes.patch_package_application} -v"]
@@ -16,7 +16,7 @@ module Gym
       def options
         options = []
 
-        options << "'#{appfile_path}'"
+        options << Shellwords.escape(appfile_path)
         options << "-o '#{ipa_path}'"
         options << "exportFormat ipa"
 

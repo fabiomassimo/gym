@@ -57,7 +57,9 @@ module Gym
       end
 
       def suffix
-        []
+        suffix = []
+        suffix << "CODE_SIGN_IDENTITY='#{Gym.config[:codesigning_identity]}'" if Gym.config[:codesigning_identity]
+        suffix
       end
 
       def pipe
@@ -76,6 +78,7 @@ module Gym
       end
 
       def archive_path
+        @archive_path ||= Gym.config[:archive_path]
         unless @archive_path
           file_name = [Gym.config[:output_name], Time.now.strftime("%F %H.%M.%S")] # e.g. 2015-08-07 14.49.12
           @archive_path = File.join(build_path, file_name.join(" ") + ".xcarchive")

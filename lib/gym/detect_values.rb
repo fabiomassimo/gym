@@ -25,6 +25,7 @@ module Gym
       end
 
       detect_scheme
+      detect_platform # we can only do that *after* we have the scheme
       detect_configuration
 
       config[:output_name] ||= Gym.project.app_name
@@ -121,8 +122,19 @@ module Gym
           config[:scheme] = choose(*(proj_schemes))
         end
       else
-        raise "Couldn't find any schemes in this project".red
+        Helper.log.error "Couldn't find any schemes in this project, make sure that the scheme is shared if you are using a workspace".red
+        Helper.log.error "Open Xcode, click on `Manage Schemes` and check the `Shared` box for the schemes you want to use".red
+
+        raise "No Schemes found".red
       end
+    end
+
+    # Is it an iOS device or a Mac?
+    def self.detect_platform
+      return if Gym.config[:destination]
+      platform = Gym.project.build_settings(key: "PLATFORM_DISPLAY_NAME") || "iOS" # either `iOS` or `OS X`
+
+      Gym.config[:destination] = "generic/platform=#{platform}"
     end
 
     # Detects the available configurations (e.g. Debug, Release)
@@ -158,6 +170,5 @@ module Gym
         end
       end
     end
-
   end
 end

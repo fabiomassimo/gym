@@ -18,7 +18,7 @@ module Gym
           expected_md5 = File.read(path)
 
           # If that location changes, search it using xcrun --sdk iphoneos -f PackageApplication
-          package_application_path = "#{Gym.xcode_path}/Platforms/iPhoneOS.platform/Developer/usr/bin/PackageApplication"
+          package_application_path = "#{Xcode.xcode_path}/Platforms/iPhoneOS.platform/Developer/usr/bin/PackageApplication"
 
           raise "Unable to patch the `PackageApplication` script bundled in XCode. This is not supported." unless expected_md5 == Digest::MD5.file(package_application_path).hexdigest
 
@@ -28,7 +28,7 @@ module Gym
           # Apply patches to PackageApplication4Gym from patches folder
           Dir[File.join(Helper.gem_path("gym"), "lib/assets/package_application_patches/*.diff")].each do |patch|
             Helper.log.info "Applying Package Application patch: #{File.basename(patch)}" if $verbose
-            command = ["patch #{@patched_package_application_path} < #{patch}"]
+            command = ["patch '#{@patched_package_application_path}' < '#{patch}'"]
             Runner.new.print_command(command, "Applying Package Application patch: #{File.basename(patch)}") if $verbose
 
             FastlaneCore::CommandExecutor.execute(command: command,
@@ -47,7 +47,8 @@ module Gym
       def clear_patched_package_application
         if @patched_package_application_path and File.exist?(@patched_package_application_path)
           Helper.log.debug "Removing patched PackageApplication file at path '#{@patched_package_application_path}'" if $verbose
-          File.delete(@patched_package_application_path)
+          # force in the unlikely event that the file was deleted (e.g. by a concurrent job)
+          FileUtils.rm @patched_package_application_path, force: true
         end
       end
     end

@@ -9,7 +9,6 @@ module Gym
       @options = plain_options
     end
 
-    # rubocop:disable Metrics/MethodLength
     def self.plain_options
       [
         FastlaneCore::ConfigItem.new(key: :workspace,
@@ -50,6 +49,11 @@ module Gym
                                      env_name: "GYM_OUTPUT_DIRECTORY",
                                      description: "The directory in which the ipa file should be stored in",
                                      default_value: "."),
+        FastlaneCore::ConfigItem.new(key: :archive_path,
+                                     short_option: "-b",
+                                     env_name: "GYM_ARCHIVE_PATH",
+                                     description: "The directory in which the archive file should be stored in",
+                                     optional: true),
         FastlaneCore::ConfigItem.new(key: :output_name,
                                      short_option: "-n",
                                      env_name: "GYM_OUTPUT_NAME",
@@ -69,7 +73,7 @@ module Gym
                                      description: "The configuration to use when building the app. Defaults to 'Release'",
                                      optional: true),
         FastlaneCore::ConfigItem.new(key: :silent,
-                                     short_option: "-t",
+                                     short_option: "-a",
                                      env_name: "GYM_SILENT",
                                      description: "Hide all information that's not necessary while building",
                                      default_value: false,
@@ -77,17 +81,17 @@ module Gym
         FastlaneCore::ConfigItem.new(key: :codesigning_identity,
                                      short_option: "-i",
                                      env_name: "GYM_CODE_SIGNING_IDENTITY",
-                                     description: "The name of the code signing identity to use. It has to match the name exactly. You usually don't need this! e.g. 'iPhone Distribution: SunApps GmbH'",
+                                     description: "The name of the code signing identity to use. It has to match the name exactly. e.g. 'iPhone Distribution: SunApps GmbH'",
                                      optional: true),
         FastlaneCore::ConfigItem.new(key: :destination,
                                      short_option: "-d",
                                      env_name: "GYM_DESTINATION",
                                      description: "Use a custom destination for building the app",
-                                     default_value: "generic/platform=iOS"),
+                                     optional: true),
         FastlaneCore::ConfigItem.new(key: :xcargs,
                                      short_option: "-x",
                                      env_name: "GYM_XCARGS",
-                                     description: "Pass additional arguments to xcodebuild when building the app. Be sure to quote the setting names and values e.g. OTHER_LDFLAGS=\"-ObjC -lstdc++\"",
+                                     description: "Pass additional arguments to xcodebuild. Be sure to quote the setting names and values e.g. OTHER_LDFLAGS=\"-ObjC -lstdc++\"",
                                      optional: true),
         FastlaneCore::ConfigItem.new(key: :xcconfig,
                                      short_option: "-y",
@@ -96,6 +100,28 @@ module Gym
                                      optional: true,
                                      verify_block: proc do |value|
                                        raise "File not found at path '#{File.expand_path(value)}'".red unless File.exist?(value)
+                                     end),
+        FastlaneCore::ConfigItem.new(key: :include_symbols,
+                                     short_option: "-m",
+                                     env_name: "GYM_INCLUDE_SYMBOLS",
+                                     description: "Should the ipa file include symbols?",
+                                     default_value: true,
+                                     is_string: false),
+        FastlaneCore::ConfigItem.new(key: :include_bitcode,
+                                     short_option: "-z",
+                                     env_name: "GYM_INCLUDE_BITCODE",
+                                     description: "Should the ipa include bitcode?",
+                                     default_value: false,
+                                     is_string: false),
+        FastlaneCore::ConfigItem.new(key: :export_method,
+                                     short_option: "-j",
+                                     env_name: "GYM_EXPORT_METHOD",
+                                     description: "How should gym export the archive?",
+                                     default_value: "app-store",
+                                     is_string: true,
+                                     verify_block: proc do |value|
+                                       av = %w(app-store ad-hoc package enterprise development developer-id)
+                                       raise "Unsupported export_method, must be: #{av}" unless av.include?(value)
                                      end),
         FastlaneCore::ConfigItem.new(key: :provisioning_profile_path,
                                      short_option: "-e",
@@ -108,6 +134,5 @@ module Gym
 
       ]
     end
-    # rubocop:enable Metrics/MethodLength
   end
 end
