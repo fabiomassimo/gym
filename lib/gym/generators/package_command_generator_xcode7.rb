@@ -5,7 +5,13 @@ module Gym
       def generate
         print_legacy_information
 
-        parts = ["/usr/bin/xcrun xcodebuild -exportArchive"]
+        if rvm_installation_detected?
+          parts = ["rvm system"] # Swtich to system's ruby version
+          parts += " | /usr/bin/xcrun xcodebuild -exportArchive" # pipe to xcodebuild
+        else
+          parts = ["/usr/bin/xcrun xcodebuild -exportArchive"]
+        end
+
         parts += options
         parts += pipe
 
@@ -25,7 +31,11 @@ module Gym
       end
 
       def pipe
-        [""]
+        if rvm_installation_detected?
+          [" | rvm use #{@rvm_version}"]
+        else
+          [""]
+        end
       end
 
       # We export the ipa into this directory, as we can't specify the ipa file directly
@@ -64,8 +74,6 @@ module Gym
         if Gym.config[:export_method] == 'app-store'
           hash[:uploadSymbols] = (Gym.config[:include_symbols] ? true : false)
           hash[:uploadBitcode] = (Gym.config[:include_bitcode] ? true : false)
-        else
-            hash[:compileBitcode] = false
         end
 
         hash.to_plist
@@ -75,6 +83,14 @@ module Gym
         if Gym.config[:provisioning_profile_path]
           Helper.log.info "You're using Xcode 7, the `provisioning_profile_path` value will be ignored".yellow
           Helper.log.info "Please follow the Code Signing Guide: https://github.com/KrauseFx/fastlane/blob/master/docs/CodeSigning.md".yellow
+        end
+      end
+
+      # If RVM is installed and used before export the archive we have to switch back to system's Ruby version.
+      def rvm_installation_detected?
+        @rvm_installation ||= system("env | egrep -v '^PATH' | egrep -q '^rvm_path'")
+        if @rvm_installation
+          @rvm_version ||=  `which ruby`.slice(0..(test.index('/bin'))).split("/").last
         end
       end
     end
